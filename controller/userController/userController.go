@@ -13,9 +13,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var MongodDbClient = service.ConnectDb()
-
-var DataBase = MongodDbClient.Database("EduCoApp")
+var userCollection = service.ConnectToCollection("User")
 
 func creatPasswordHash(password string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), 14)
@@ -52,7 +50,7 @@ func CreateUser(context *fiber.Ctx) error {
 
 		filter := bson.M{"EmailAddress": user.EmailAddress}
 
-		result, err := DataBase.Collection("User").Find(appContext.Background(), filter)
+		result, err := userCollection.Find(appContext.Background(), filter)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -69,7 +67,7 @@ func CreateUser(context *fiber.Ctx) error {
 				var emptyStringArray = make([]string, 0)
 				var emptySocialMediaLinkArray = make([]types.UserSocialLink, 0)
 				doc := bson.D{{Key: "UserName", Value: user.UserName}, {Key: "PassHash", Value: hashedPassword}, {Key: "EmailAddress", Value: user.EmailAddress}, {Key: "Courses", Value: emptyStringArray}, {Key: "Followers", Value: emptyStringArray}, {Key: "Following", Value: emptyStringArray}, {Key: "ProfileDescription", Value: ""}, {Key: "SocialMediaLinks", Value: emptySocialMediaLinkArray}}
-				result, err := DataBase.Collection("User").InsertOne(appContext.TODO(), doc)
+				result, err := userCollection.InsertOne(appContext.TODO(), doc)
 				if err == nil {
 					responseData := dto.CreateUserResponse{
 						Success: true,
